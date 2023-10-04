@@ -9,32 +9,34 @@ public class InitApp : MonoBehaviour
     public Vector2 turn;
     public GameObject obj;
     public bool rotateObject = true;
-    //readonly float rotSpeed = 200;
 
     Vector3 mPrevPos = Vector3.zero;
     Vector3 mPosDelta = Vector3.zero;
 
     // Helper function for getting the command line arguments
-    private static string GetArg(string name)
+    private static string GetArg(string name, string[] args)
     {
-        var args = System.Environment.GetCommandLineArgs();
-
-        if (name == "mesh")
-            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_mesh.obj";
-        if (name == "coeff")
-            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_coeff.png";
-        if (name == "normal")
-            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_normal.png";
-        if (name == "color")
-            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_color.png";
-
         for (int i = 0; i < args.Length; i++)
         {
             if (args[i] == name && args.Length > i + 1)
             {
-                return args[i + 1];
+                Debug.Log("Found in cli args >> " + args[i]);
+                Debug.Log("Found in cli args >> " + args[i + 1]);
+                if (args[i + 1] != null)
+                    return args[i + 1];
             }
         }
+
+        Debug.Log("Not found in cli parameters, trying default values for >> " + name);
+        if (name == "-mesh")
+            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_mesh.obj";
+        if (name == "-coeff")
+            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_coeff.png";
+        if (name == "-normal")
+            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_normal.png";
+        if (name == "-color")
+            return "F:\\EAGames\\FIFA 17_editing\\Content\\Character\\ball\\ball_48\\ball_48_color.png";
+
         return null;
     }
 
@@ -42,10 +44,19 @@ public class InitApp : MonoBehaviour
     {
         Debug.Log("STARTTTTTT...");
 
-        string pathMesh = GetArg("mesh");
-        string pathCoeff = GetArg("coeff");
-        string pathNormal = GetArg("normal");
-        string pathColor = GetArg("color");
+        string[] args = System.Environment.GetCommandLineArgs();
+
+        Debug.Log("cli args size >> " + args.Length);
+
+        for (int i = 0; i < args.Length; i++)
+        {
+            Debug.Log(string.Format("arg {0} >>> {1}", i, args[i]));
+        }
+
+        string pathMesh = GetArg("-mesh", args);
+        string pathCoeff = GetArg("-coeff", args);
+        string pathNormal = GetArg("-normal", args);
+        string pathColor = GetArg("-color", args);
 
         if (!File.Exists(pathMesh))
             return;
@@ -53,7 +64,6 @@ public class InitApp : MonoBehaviour
         Stream meshStream = new MemoryStream(File.ReadAllBytes(pathMesh));
         Debug.Log("pathMesh >> " + pathMesh);
         Debug.Log("readAllBytes >> " + File.ReadAllBytes(pathMesh));
-        Debug.Log("meshStream >> " + meshStream);
 
         obj = new OBJLoader().Load(meshStream);
         obj.transform.localScale = new Vector3(10, 10, 10);
@@ -63,6 +73,13 @@ public class InitApp : MonoBehaviour
         if (File.Exists(pathColor))
         {
             Debug.Log("Texture Found...");
+
+            foreach (Renderer m in GameObject.FindObjectsOfType<Renderer>())
+            {
+                Debug.Log(string.Format("Renderer {0}, {1} >> ", m, m.name));
+            }
+
+            Debug.Log("Color >> " + pathColor);
 
             var bytes = File.ReadAllBytes(pathColor);
             var texColor = new Texture2D(1, 1);
@@ -88,7 +105,6 @@ public class InitApp : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        Debug.Log("AWWAAAKKKEEE...");
     }
 
     // Update is called once per frame
@@ -110,17 +126,6 @@ public class InitApp : MonoBehaviour
             obj.transform.Rotate(Camera.main.transform.right, Vector3.Dot(mPosDelta, Camera.main.transform.up), Space.World);
         }
         mPrevPos = Input.mousePosition;
-    }
-
-    void OnMouseDrag()
-    {
-
-        Debug.Log("aaa");
-        //float rotX = Input.GetAxis("Mouse X") * rotSpeed * Mathf.Deg2Rad;
-        //float rotY = Input.GetAxis("Mouse Y") * rotSpeed * Mathf.Deg2Rad;
-
-        //obj.transform.Rotate(Vector3.up, -rotX);
-        //obj.transform.Rotate(Vector3.right, rotY);
     }
 
 }

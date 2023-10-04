@@ -77,7 +77,8 @@ namespace Dummiesman
 
         public static Material CreateNullMaterial()
         {
-            return new Material(Shader.Find("Standard (Specular setup)"));
+            return new Material(Shader.Find("Standard"));
+            //return new Material(Shader.Find("Standard (Specular setup)"));
             //return new Material(Shader.Find("Legacy Shaders/Specular"));
         }
 
