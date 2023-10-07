@@ -146,7 +146,7 @@ PrefabInstance:
     - target: {fileID: -9136413676477421455, guid: e28919d322594d447b184dfb1087d545, type: 3}
       propertyPath: m_Materials.Array.data[2]
       value: 
-      objectReference: {fileID: 2100000, guid: 00319de0de3531247ad87ea0d58650f1, type: 2}
+      objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e28919d322594d447b184dfb1087d545, type: 3}
       propertyPath: m_LocalScale.x
       value: 10
@@ -258,9 +258,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d607c944415ad944d8f0e727ff351d09, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  turn: {x: 0, y: 0}
-  obj: {fileID: 640681818}
-  rotateObject: 1
 --- !u!4 &640681820
 Transform:
   m_ObjectHideFlags: 0
