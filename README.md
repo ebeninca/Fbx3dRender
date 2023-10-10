@@ -46,11 +46,19 @@ You'll need to move the files in the output folder you defined in the first buil
 
 ## TODO list
 
-- Mouse right click hold zoom in zoom out
-- Support for other types of models
-- 
+- Support for other types of models 
 
 ## Changelog
+
+v002
+ - MouseScroll to change FOV
+ - Print FOV on screen
+ - MouseDrag right button to zoom in and out
+ - Double click reset position, zoom and fov
+ - FOV adjusted to default 20
+ - Solid light gray background for MakeAutoTransparent work on photo mode
+ - Added CapsuleCollider and Event Trigger
+
 
 v001
  - Ball rendering succesfully

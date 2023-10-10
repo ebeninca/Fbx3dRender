@@ -1,19 +1,31 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Dummiesman;
 using System.IO;
 using Autodesk.Fbx;
+using UnityEngine.EventSystems;
 
-public class InitApp : MonoBehaviour
+public class InitApp : MonoBehaviour, IPointerClickHandler
 {
-    GameObject obj;
+    GameObject mainObj;
+
+    //Rotation controls
     Vector3 mPrevPos = Vector3.zero;
     Vector3 mPosDelta = Vector3.zero;
 
+    //FOV controls
+    private readonly float zoomSpeed = 5.0f;
+    private readonly float minFOV = 5.0f;
+    private readonly float maxFOV = 60.0f;
+    private float scrollInput = 0f;
+    private float newFOV;
+
+    //Zoom controls
+    public readonly float moveSpeed = 20.0f;
+    private Vector3 dragOrigin;
+
     void OnDestroy()
     {
-
+        Debug.Log("ON DESTROY...");
     }
 
     void Start()
@@ -45,10 +57,12 @@ public class InitApp : MonoBehaviour
         Debug.Log("pathMesh >> " + outputOBJPath);
         Debug.Log("readAllBytes >> " + File.ReadAllBytes(outputOBJPath));
 
-        obj = new OBJLoader().Load(meshStream);
-        obj.transform.localScale = new Vector3(10, 10, 10);
-        obj.transform.localPosition = new Vector3(0.97f, 0.72f, -6.5f);
+        mainObj = new OBJLoader().Load(meshStream);
+        mainObj.transform.localScale = new Vector3(10, 10, 10);
+        mainObj.transform.localPosition = new Vector3(0.97f, 0.72f, -6.5f);
         GameObject.Find("ball_mat").transform.localScale = new Vector3(-1, 1, 1);
+
+        AddColliderAndEventTrigger(GameObject.Find("ball_mat"));
 
         Debug.Log("Texture Found...");
 
@@ -95,6 +109,26 @@ public class InitApp : MonoBehaviour
         return mat;
     }
 
+    private void AddColliderAndEventTrigger(GameObject targetObj)
+    {
+        targetObj.AddComponent<CapsuleCollider>();
+
+        // Create an EventTrigger component for the new GameObject.
+        EventTrigger eventTrigger = targetObj.AddComponent<EventTrigger>();
+
+        // Create a new EventTrigger.Entry for the pointer click event.
+        EventTrigger.Entry entry = new EventTrigger.Entry
+        {
+            eventID = EventTriggerType.PointerClick
+        };
+
+        // Add a callback to call the OnPointerClick method.
+        entry.callback.AddListener((data) => { OnPointerClick((PointerEventData)data); });
+
+        // Add the entry to the EventTrigger's triggers list.
+        eventTrigger.triggers.Add(entry);
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -102,19 +136,58 @@ public class InitApp : MonoBehaviour
         {
             mPosDelta = Input.mousePosition - mPrevPos;
 
-            if (Vector3.Dot(obj.transform.up, Vector3.up) >= 0)
+            if (Vector3.Dot(mainObj.transform.up, Vector3.up) >= 0)
             {
-                obj.transform.Rotate(transform.up, Vector3.Dot(mPosDelta, Camera.main.transform.right), Space.World);
+                mainObj.transform.Rotate(transform.up, Vector3.Dot(mPosDelta, Camera.main.transform.right), Space.World);
             }
             else
             {
-                obj.transform.Rotate(transform.up, Vector3.Dot(mPosDelta, Camera.main.transform.right), Space.World);
+                mainObj.transform.Rotate(transform.up, Vector3.Dot(mPosDelta, Camera.main.transform.right), Space.World);
             }
 
-            obj.transform.Rotate(Camera.main.transform.right, Vector3.Dot(mPosDelta, Camera.main.transform.up), Space.World);
+            mainObj.transform.Rotate(Camera.main.transform.right, Vector3.Dot(mPosDelta, Camera.main.transform.up), Space.World);
         }
+
         mPrevPos = Input.mousePosition;
+
+        if ((scrollInput = Input.GetAxis("Mouse ScrollWheel")) != 0)
+        {
+            newFOV = Camera.main.fieldOfView - scrollInput * zoomSpeed;
+            newFOV = Mathf.Clamp(newFOV, minFOV, maxFOV);
+            Camera.main.fieldOfView = newFOV;
+        }
+
+        // Check for right mouse button down to start dragging.
+        if (Input.GetMouseButtonDown(1))
+        {
+            dragOrigin = Input.mousePosition;
+        }
+
+        // If the right mouse button is held down, move the camera based on mouse movement.
+        if (Input.GetMouseButton(1))
+        {
+            Vector3 dragDelta = Input.mousePosition - dragOrigin;
+            float moveAmount = dragDelta.y * moveSpeed * Time.deltaTime;
+
+            // Move the camera forward or backward based on mouse movement.
+            Camera.main.transform.Translate(Vector3.forward * moveAmount);
+
+            dragOrigin = Input.mousePosition; // Update the drag origin for the next frame.
+        }
+
     }
+
+    public void OnPointerClick(PointerEventData eventData)
+    {
+        if (eventData.clickCount == 2)
+        {
+            //reset camera
+            mainObj.transform.localRotation = Quaternion.Euler(0f, 0f, 0f);
+            Camera.main.fieldOfView = 20f;
+            Camera.main.transform.position = new Vector3(0.98f, 0.67f, 0.05f);
+        }
+    }
+
 
     // Helper function for getting the command line arguments
     private static string GetArg(string name, string[] args)
@@ -195,6 +268,4 @@ public class InitApp : MonoBehaviour
 
         Debug.Log($"Conversion completed. OBJ file saved to {outputFilePath}");
     }
-
-
 }
