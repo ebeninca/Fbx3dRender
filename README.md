@@ -50,6 +50,10 @@ You'll need to move the files in the output folder you defined in the first buil
 
 ## Changelog
 
+v003
+ - Light direction adjusted
+ - TCPListener to allow communication with winform after start
+ 
 v002
  - MouseScroll to change FOV
  - Print FOV on screen

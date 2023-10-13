@@ -1,12 +1,15 @@
-using UnityEngine;
-using Dummiesman;
-using System.IO;
 using Autodesk.Fbx;
+using Dummiesman;
+using System;
+using System.IO;
+using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class InitApp : MonoBehaviour, IPointerClickHandler
 {
     GameObject mainObj;
+    GameObject childObj;
+    TCPListenerServer tcpServer;
 
     //Rotation controls
     Vector3 mPrevPos = Vector3.zero;
@@ -23,19 +26,23 @@ public class InitApp : MonoBehaviour, IPointerClickHandler
     public readonly float moveSpeed = 20.0f;
     private Vector3 dragOrigin;
 
-    void OnDestroy()
-    {
-        Debug.Log("ON DESTROY...");
-    }
-
     void Start()
     {
         Debug.Log("STARTTTTTT...");
-
         string[] args = System.Environment.GetCommandLineArgs();
 
         Debug.Log("cli args size >> " + args.Length);
 
+        string runServer = GetArg("-runServer", args);
+        if (runServer == null) runServer = "8888";
+        tcpServer = new TCPListenerServer(Int16.Parse(runServer));
+        tcpServer.Start();
+
+        BuildGameObject(args);
+    }
+
+    private void BuildGameObject(string[] args)
+    {
         for (int i = 0; i < args.Length; i++)
         {
             Debug.Log(string.Format("arg {0} >>> {1}", i, args[i]));
@@ -47,8 +54,19 @@ public class InitApp : MonoBehaviour, IPointerClickHandler
         string pathColor = GetArg("-color", args);
         string pathEmboss = GetArg("-emboss", args);
 
+        pathMesh = pathMesh?.Replace("\"", "");
+        pathCoeff = pathCoeff?.Replace("\"", "");
+        pathNormal = pathNormal?.Replace("\"", "");
+        pathColor = pathColor?.Replace("\"", "");
+        pathEmboss = pathEmboss?.Replace("\"", "");
+
+        Debug.Log("BuildGameObject PathMesh >> " + pathMesh);
+
         if (!File.Exists(pathMesh))
+        {
+            Debug.Log("No File for mesh path found, cancelling.");
             return;
+        }
 
         string outputOBJPath = pathMesh.Remove(pathMesh.Length - 3) + "obj";
         ConvertFBXtoOBJ(pathMesh, outputOBJPath);
@@ -60,9 +78,10 @@ public class InitApp : MonoBehaviour, IPointerClickHandler
         mainObj = new OBJLoader().Load(meshStream);
         mainObj.transform.localScale = new Vector3(10, 10, 10);
         mainObj.transform.localPosition = new Vector3(0.97f, 0.72f, -6.5f);
-        GameObject.Find("ball_mat").transform.localScale = new Vector3(-1, 1, 1);
 
-        AddColliderAndEventTrigger(GameObject.Find("ball_mat"));
+        childObj = mainObj.transform.GetChild(0).gameObject;
+        childObj.transform.localScale = new Vector3(-1, 1, 1);
+        AddColliderAndEventTrigger(childObj);
 
         Debug.Log("Texture Found...");
 
@@ -80,7 +99,7 @@ public class InitApp : MonoBehaviour, IPointerClickHandler
             materialsArray = new Material[1];
             materialsArray[0] = NewMaterial(pathEmboss);
 
-            GameObject.Find("ball_mat").transform.GetComponent<Renderer>().materials = materialsArray;
+            childObj.transform.GetComponent<Renderer>().materials = materialsArray;
             return;
         }
         else if (File.Exists(pathColor))
@@ -92,7 +111,7 @@ public class InitApp : MonoBehaviour, IPointerClickHandler
             materialsArray[1] = NewMaterial(pathCoeff);
             materialsArray[2] = NewMaterial(pathNormal);
 
-            GameObject.Find("ball_mat").transform.GetComponent<Renderer>().materials = materialsArray;
+            childObj.transform.GetComponent<Renderer>().materials = materialsArray;
             return;
         }
 
@@ -188,6 +207,24 @@ public class InitApp : MonoBehaviour, IPointerClickHandler
         }
     }
 
+    public void Reload(string[] args)
+    {
+        Debug.Log("//TODO RELOADING");
+
+        if (mainObj != null)
+        {
+            Destroy(childObj);
+            Destroy(mainObj);
+        }
+
+        BuildGameObject(args);
+    }
+
+    void OnDestroy()
+    {
+        Debug.Log("ON DESTROY...");
+        tcpServer?.Destroy();
+    }
 
     // Helper function for getting the command line arguments
     private static string GetArg(string name, string[] args)
