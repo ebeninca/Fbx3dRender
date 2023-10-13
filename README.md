@@ -32,14 +32,7 @@ To include the Autodesk® FBX® SDK for Unity package in your build:
 
 - File >> Build Settings >> Uncheck Development build
 
-### To generate for Visual Studio
-
-- File >> Build settings >> Create Visual Studio Solution
-
 ### After Build to use in CM17 
-
-- Visual studio option:
-Copy and replace the generated code inside CM17, inside VS2019 select the "Master" build option.
 
 - Binary option:
 You'll need to move the files in the output folder you defined in the first build (usually "bin" folder) to the CM17 Fbx3dRenderBuild Folder.
@@ -62,7 +55,6 @@ v002
  - FOV adjusted to default 20
  - Solid light gray background for MakeAutoTransparent work on photo mode
  - Added CapsuleCollider and Event Trigger
-
 
 v001
  - Ball rendering succesfully
